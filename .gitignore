@@ -1,0 +1,10 @@
+# frontend
+node_modules
+.env
+.env.local
+
+# backend
+target
+Cargo.lock
+.env
+.env.local
