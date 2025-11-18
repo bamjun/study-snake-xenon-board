@@ -10,3 +10,4 @@ Cargo.lock
 .env.local
 
 .claude
+.memo
