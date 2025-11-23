@@ -6,7 +6,7 @@ use axum::{
 
 use crate::state::AppState;
 use super::models::{CreateUserRequest, LoginRequest, User, AuthResponse};
-use super::auth::{hash_password, verify_password, create_jwt};
+use super::auth::{hash_password, verify_password, create_jwt, AuthUser};
 
 #[utoipa::path(
     post,
@@ -93,4 +93,21 @@ pub async fn login(
             (StatusCode::INTERNAL_SERVER_ERROR, "Database error").into_response()
         }
     }
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/users/me",
+    responses(
+        (status = 200, description = "Current user info", body = User),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_me(
+    AuthUser(user): AuthUser,
+) -> impl IntoResponse {
+    Json(user)
 }

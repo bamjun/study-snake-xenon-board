@@ -21,6 +21,7 @@ use state::AppState;
     paths(
         apps::user::handlers::register,
         apps::user::handlers::login,
+        apps::user::handlers::get_me,
         apps::board::handlers::list_posts,
         apps::board::handlers::create_post,
         apps::board::handlers::get_post,

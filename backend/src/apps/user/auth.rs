@@ -45,3 +45,59 @@ pub fn create_jwt(user_id: Uuid, config: &Config) -> Result<String, jsonwebtoken
 }
 
 // Optional: Middleware helper to decode JWT would go here or in a shared middleware module
+
+use axum::{
+    async_trait,
+    extract::FromRequestParts,
+    http::{header::AUTHORIZATION, request::Parts, StatusCode},
+};
+use jsonwebtoken::{decode, Validation, DecodingKey};
+use crate::state::AppState;
+use super::models::User;
+
+pub struct AuthUser(pub User);
+
+#[async_trait]
+impl FromRequestParts<AppState> for AuthUser {
+    type Rejection = (StatusCode, String);
+
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+        // 1. Get Authorization header
+        let auth_header = parts
+            .headers
+            .get(AUTHORIZATION)
+            .and_then(|value| value.to_str().ok())
+            .ok_or((StatusCode::UNAUTHORIZED, "Missing Authorization header".to_string()))?;
+
+        // 2. Parse Bearer token
+        let token = if auth_header.starts_with("Bearer ") {
+            &auth_header[7..]
+        } else {
+            return Err((StatusCode::UNAUTHORIZED, "Invalid Authorization header format".to_string()));
+        };
+
+        // 3. Decode JWT
+        let token_data = decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(state.config.jwt_secret.as_bytes()),
+            &Validation::default(),
+        )
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token".to_string()))?;
+
+        // 4. Fetch User from DB
+        let user_id = Uuid::parse_str(&token_data.claims.sub)
+             .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid user ID in token".to_string()))?;
+
+        let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_optional(&state.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Database error: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string())
+            })?
+            .ok_or((StatusCode::UNAUTHORIZED, "User not found".to_string()))?;
+
+        Ok(AuthUser(user))
+    }
+}
