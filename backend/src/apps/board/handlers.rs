@@ -7,6 +7,14 @@ use uuid::Uuid;
 use crate::state::AppState;
 use super::models::{CreatePostRequest, Post};
 
+
+#[utoipa::path(
+    get,
+    path = "/api/boards",
+    responses(
+        (status = 200, description = "List all posts", body = [Post])
+    )
+)]
 pub async fn list_posts(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -23,6 +31,14 @@ pub async fn list_posts(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/boards",
+    request_body = CreatePostRequest,
+    responses(
+        (status = 201, description = "Post created", body = Post)
+    )
+)]
 pub async fn create_post(
     State(state): State<AppState>,
     Json(payload): Json<CreatePostRequest>,
@@ -50,6 +66,17 @@ pub async fn create_post(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/boards/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Post ID")
+    ),
+    responses(
+        (status = 200, description = "Get post by ID", body = Post),
+        (status = 404, description = "Post not found")
+    )
+)]
 pub async fn get_post(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,

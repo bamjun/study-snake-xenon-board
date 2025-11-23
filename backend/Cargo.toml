@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.8.1"
+axum = "0.7.9"
 tokio = { version = "1.43.0", features = ["full"] }
 sqlx = { version = "0.8.3", features = ["postgres", "runtime-tokio", "tls-native-tls", "macros", "chrono", "uuid"] }
 serde = { version = "1.0.217", features = ["derive"] }
@@ -16,4 +16,6 @@ jsonwebtoken = "9.3.1"
 argon2 = "0.5.3"
 chrono = { version = "0.4.39", features = ["serde"] }
 uuid = { version = "1.12.1", features = ["serde", "v4"] }
-tower-http = { version = "0.6.2", features = ["cors", "trace"] }
+tower-http = { version = "0.5.2", features = ["cors", "trace"] }
+utoipa = { version = "5.2.0", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-swagger-ui = { version = "8.0.0", features = ["axum"] }

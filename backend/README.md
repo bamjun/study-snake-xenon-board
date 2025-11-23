@@ -49,6 +49,13 @@ cargo init backend
 cd backend
 ```
 
+```bash
+# sqlx migrate add user_table 작성
+sqlx migrate add user_table 
+# sqlx migrate run
+sqlx migrate run
+```
+
 ### 2. 의존성 추가 (Dependencies)
 `Cargo.toml` 파일에 필요한 라이브러리를 추가합니다.
 - **axum**: 웹 프레임워크

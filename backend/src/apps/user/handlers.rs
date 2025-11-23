@@ -8,6 +8,15 @@ use crate::state::AppState;
 use super::models::{CreateUserRequest, LoginRequest, User, AuthResponse};
 use super::auth::{hash_password, verify_password, create_jwt};
 
+#[utoipa::path(
+    post,
+    path = "/api/users/register",
+    request_body = CreateUserRequest,
+    responses(
+        (status = 201, description = "User created successfully", body = User),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
@@ -43,6 +52,15 @@ pub async fn register(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/users/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Login successful", body = AuthResponse),
+        (status = 401, description = "Unauthorized")
+    )
+)]
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,

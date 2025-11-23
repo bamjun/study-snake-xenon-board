@@ -4,6 +4,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 mod config;
 mod db;
@@ -12,6 +14,32 @@ mod state;
 
 use config::Config;
 use state::AppState;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        apps::user::handlers::register,
+        apps::user::handlers::login,
+        apps::board::handlers::list_posts,
+        apps::board::handlers::create_post,
+        apps::board::handlers::get_post,
+    ),
+    components(
+        schemas(
+            apps::user::models::User,
+            apps::user::models::CreateUserRequest,
+            apps::user::models::LoginRequest,
+            apps::user::models::AuthResponse,
+            apps::board::models::Post,
+            apps::board::models::CreatePostRequest,
+            apps::board::models::UpdatePostRequest,
+        )
+    ),
+    tags(
+        (name = "backend", description = "Backend API")
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
@@ -37,11 +65,16 @@ async fn main() {
         config: Arc::new(config.clone()),
     };
 
-    // Build Router
-    let app = Router::new()
+    // Build API Router (with state)
+    let api_router = Router::new()
         .nest("/api/users", apps::user::router())
         .nest("/api/boards", apps::board::router())
         .with_state(state);
+
+    // Build Main Router (merging Swagger and API)
+    let app = Router::new()
+        .merge(SwaggerUi::new("/docs").url("/api-docs/openapi.json", ApiDoc::openapi()))
+        .merge(api_router);
 
     // Start Server
     let addr = SocketAddr::from(([127, 0, 0, 1], config.server_port));
