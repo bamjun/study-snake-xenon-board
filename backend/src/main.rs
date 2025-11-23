@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
+use utoipa::openapi::security::{Http, HttpAuthScheme, SecurityScheme};
 use utoipa_swagger_ui::SwaggerUi;
 
 mod config;
@@ -37,9 +38,27 @@ use state::AppState;
     ),
     tags(
         (name = "backend", description = "Backend API")
-    )
+    ),
+    modifiers(&SecurityAddon)
 )]
 struct ApiDoc;
+
+struct SecurityAddon;
+
+impl utoipa::Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.security_schemes.insert(
+                "bearer_auth".to_string(),
+                SecurityScheme::Http(Http::new(HttpAuthScheme::Bearer)),
+            );
+        }
+        openapi.security = Some(vec![utoipa::openapi::security::SecurityRequirement::new(
+            "bearer_auth",
+            Vec::<String>::new(),
+        )]);
+    }
+}
 
 #[tokio::main]
 async fn main() {
