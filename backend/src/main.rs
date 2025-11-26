@@ -91,10 +91,17 @@ async fn main() {
         .nest("/api/boards", apps::board::router())
         .with_state(state);
 
+    // CORS Layer
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_methods(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any);
+
     // Build Main Router (merging Swagger and API)
     let app = Router::new()
         .merge(SwaggerUi::new("/docs").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .merge(api_router);
+        .merge(api_router)
+        .layer(cors);
 
     // Start Server
     let addr = SocketAddr::from(([127, 0, 0, 1], config.server_port));
