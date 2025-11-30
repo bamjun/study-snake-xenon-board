@@ -104,7 +104,7 @@ async fn main() {
         .layer(cors);
 
     // Start Server
-    let addr = SocketAddr::from(([127, 0, 0, 1], config.server_port));
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.server_port));
     tracing::info!("🚀 Server running at http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.unwrap();
